@@ -19,20 +19,22 @@ import com.google.firebase.auth.GoogleAuthProvider
 
 class LoginActivity : AppCompatActivity() {
 
+
     var mAuth = FirebaseAuth.getInstance()
-
-    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-        .requestIdToken(getString(R.string.default_web_client_id))
-        .requestEmail()
-        .build()
-
-    val mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
-
-    val viewModel: LoginActivityViewModel by viewModels()
+//    val viewModel: LoginActivityViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+
+
+
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+
+        val mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
 
         findViewById<View>(R.id.google_sign_in_button).setOnClickListener {
             val signInIntent = mGoogleSignInClient.signInIntent

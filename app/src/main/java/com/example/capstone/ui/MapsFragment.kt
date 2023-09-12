@@ -14,13 +14,11 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
 
 class MapsFragment : Fragment() {
 
-    val database = Firebase.database
-    val myRef = database.getReference("message")
+//    val database = Firebase.database
+//    val myRef = database.getReference("message")
 
     private val callback = OnMapReadyCallback { mMap ->
 
@@ -48,7 +46,6 @@ class MapsFragment : Fragment() {
             }
             true // return value of onMarkerClick function
         }
-
     }
 
     override fun onCreateView(
