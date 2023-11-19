@@ -46,6 +46,7 @@ class LoginActivity : AppCompatActivity() {
             if (result.resultCode == Activity.RESULT_OK) {
                 val intent = result.data
                 val task = GoogleSignIn.getSignedInAccountFromIntent(intent)
+                Toast.makeText(this, "", Toast.LENGTH_SHORT).show()
                 try {
                     // Google Sign In was successful, authenticate with Firebase
                     val account = task.getResult(ApiException::class.java)
@@ -74,6 +75,7 @@ class LoginActivity : AppCompatActivity() {
         val credential = GoogleAuthProvider.getCredential(idToken, /*accessToken=*/ null)
         mAuth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
+                Toast.makeText(this, ""+task, Toast.LENGTH_SHORT).show()
                 if (task.isSuccessful) {
                     // Sign in success, update UI with the signed-in user's information
                     val user = mAuth.currentUser
