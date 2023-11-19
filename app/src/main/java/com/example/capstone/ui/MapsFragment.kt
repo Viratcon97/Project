@@ -188,6 +188,12 @@ class MapsFragment : Fragment() {
         }*/
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        requireContext().stopService(Intent(requireContext(), GeofenceService::class.java))
+        requireActivity().unregisterReceiver(geofenceReceiver)
+    }
+
     private fun getResponseFromRealtimeDatabaseUsingLiveData() : MutableLiveData<Response> {
 
         myRef.child("places").get().addOnCompleteListener { task ->
