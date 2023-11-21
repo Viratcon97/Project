@@ -14,8 +14,14 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
+import androidx.core.content.getSystemService
 import androidx.lifecycle.MutableLiveData
 import com.example.capstone.R
 import com.example.capstone.model.Place
@@ -33,6 +39,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
@@ -47,6 +54,8 @@ class MapsFragment : Fragment() {
 
     lateinit var mGoogleMap: GoogleMap
     private var mFusedLocationClient: FusedLocationProviderClient? = null
+
+    lateinit var marker: MarkerOptions
 
     private val geofenceReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -67,6 +76,15 @@ class MapsFragment : Fragment() {
                     val lat = dataSnapShot.child("latitude").getValue(Double::class.java) ?: 0.0
                     val lng = dataSnapShot.child("longitude").getValue(Double::class.java)  ?: 0.0
                     val latlng = LatLng(lat,lng)
+
+                    // Example of adding markers
+                    val markerWithRating = CustomMarker(
+                        name = dataSnapShot.child("placeName").getValue(String::class.java).toString(),
+                        description = dataSnapShot.child("placeDescription").getValue(String::class.java).toString(),
+                        category = dataSnapShot.child("category").getValue(String::class.java).toString(),
+                        iconRes = R.drawable.bottom_navigation_icon_event,
+                        imageResList = listOf(R.drawable.bottom_navigation_icon_event, R.drawable.bottom_navigation_icon_event, R.drawable.bottom_navigation_icon_event),
+                    )
                     val markerOptions = latlng?.let {
                         MarkerOptions()
                             .position(it)
@@ -78,8 +96,8 @@ class MapsFragment : Fragment() {
                         // Geofence entered, add the marker
                         if (markerOptions != null) {
 //                    Toast.makeText(requireContext(), "sdfs", Toast.LENGTH_SHORT).show()
-                            mGoogleMap.addMarker(markerOptions)
-
+                            val marker = mGoogleMap.addMarker(markerOptions)
+                            marker?.tag = markerWithRating
                         }
                     } else {
                         // Geofence entered, remove the marker
@@ -132,7 +150,62 @@ class MapsFragment : Fragment() {
         mGoogleMap = mMap
         mGoogleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
         enableMyLocation()
+        // Set custom InfoWindowAdapter
+        mGoogleMap?.setInfoWindowAdapter(CustomInfoWindowAdapter())
     }
+
+    // Custom InfoWindowAdapter class
+    inner class CustomInfoWindowAdapter : GoogleMap.InfoWindowAdapter {
+
+        private val mInflater: LayoutInflater = requireContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+
+        override fun getInfoContents(p0: Marker): View? {
+            val customView = mInflater.inflate(R.layout.custom_marker_option, null)
+
+            // Get data from the marker (assuming you have a custom Marker class)
+            val customMarker = p0?.tag as? CustomMarker// Your custom marker class
+            if (customMarker != null){
+                val nameTextView: TextView = customView.findViewById(R.id.textViewName)
+                val descriptionTextView: TextView = customView.findViewById(R.id.textViewDescription)
+                val categoryTextView: TextView = customView.findViewById(R.id.textViewCategory)
+                val imageSliderLayout: LinearLayout = customView.findViewById(R.id.imageSliderLayout)
+
+                nameTextView.text = customMarker.name
+                descriptionTextView.text = customMarker.description
+                categoryTextView.text = customMarker.category
+
+                for (imageResId in customMarker.imageResList) {
+                    val imageView = ImageView(requireContext())
+                    imageView.layoutParams = LinearLayout.LayoutParams(
+                        400,
+                        400
+                    )
+                    imageView.setImageResource(imageResId)
+                    imageSliderLayout.addView(imageView)
+                }
+                customView.setOnClickListener {
+                    // Handle click event here
+                    // You can perform any action when the info window is clicked
+                    Toast.makeText(requireContext(), "Info window clicked for ${customMarker.name}", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+
+
+            return customView
+        }
+
+        override fun getInfoWindow(p0: Marker): View? {
+            return null
+        }
+    }
+    data class CustomMarker(
+        val name: String,
+        val description: String,
+        val category: String,
+        val iconRes: Int,
+        val imageResList: List<Int>
+    )
 
     private fun enableMyLocation() {
         if (checkPermissions()) {
