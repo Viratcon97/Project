@@ -55,7 +55,8 @@ class MapsFragment : Fragment() {
     lateinit var mGoogleMap: GoogleMap
     private var mFusedLocationClient: FusedLocationProviderClient? = null
 
-    lateinit var marker: MarkerOptions
+    private val tagToMarkers = mutableMapOf<String, Marker>()
+
 
     private val geofenceReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -69,43 +70,60 @@ class MapsFragment : Fragment() {
     }
 
     private fun fetchGeofenceDataFromFirebase(geofenceId: String?, entered: Boolean) {
-        myRef.child(geofenceId ?: "").get().addOnCompleteListener{ task ->
+        myRef.child(geofenceId ?: "").get().addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 val dataSnapShot = task.result
                 if (dataSnapShot != null && dataSnapShot.exists()) {
                     val lat = dataSnapShot.child("latitude").getValue(Double::class.java) ?: 0.0
-                    val lng = dataSnapShot.child("longitude").getValue(Double::class.java)  ?: 0.0
-                    val latlng = LatLng(lat,lng)
-
-                    // Example of adding markers
-                    val markerWithRating = CustomMarker(
-                        name = dataSnapShot.child("placeName").getValue(String::class.java).toString(),
-                        description = dataSnapShot.child("placeDescription").getValue(String::class.java).toString(),
-                        category = dataSnapShot.child("category").getValue(String::class.java).toString(),
-                        iconRes = R.drawable.bottom_navigation_icon_event,
-                        imageResList = listOf(R.drawable.bottom_navigation_icon_event, R.drawable.bottom_navigation_icon_event, R.drawable.bottom_navigation_icon_event),
-                    )
-                    val markerOptions = latlng?.let {
-                        MarkerOptions()
-                            .position(it)
-                            .title(dataSnapShot.child("placeName").getValue(String::class.java))
-                            .snippet(dataSnapShot.child("placeDescription").getValue(String::class.java))
-                    }
+                    val lng = dataSnapShot.child("longitude").getValue(Double::class.java) ?: 0.0
+                    val latlng = LatLng(lat, lng)
+                    val marker: Marker?
 
                     if (entered) {
                         // Geofence entered, add the marker
+                        // Example of adding markers
+                        val markerWithRating = CustomMarker(
+                            name = dataSnapShot.child("placeName").getValue(String::class.java)
+                                .toString(),
+                            description = dataSnapShot.child("placeDescription")
+                                .getValue(String::class.java).toString(),
+                            category = dataSnapShot.child("category").getValue(String::class.java)
+                                .toString(),
+                            iconRes = R.drawable.bottom_navigation_icon_event,
+                            imageResList = listOf(
+                                R.drawable.bottom_navigation_icon_event,
+                                R.drawable.bottom_navigation_icon_event,
+                                R.drawable.bottom_navigation_icon_event
+                            ),
+                        )
+                        val markerOptions = latlng?.let {
+                            MarkerOptions()
+                                .position(it)
+                                .title(dataSnapShot.child("placeName").getValue(String::class.java))
+                                .snippet(
+                                    dataSnapShot.child("placeDescription")
+                                        .getValue(String::class.java)
+                                )
+                        }
                         if (markerOptions != null) {
 //                    Toast.makeText(requireContext(), "sdfs", Toast.LENGTH_SHORT).show()
-                            val marker = mGoogleMap.addMarker(markerOptions)
+                            marker = mGoogleMap.addMarker(markerOptions)
+                            if (marker != null) {
+                                tagToMarkers[markerWithRating.name] = marker
+                            }
                             marker?.tag = markerWithRating
+
                         }
                     } else {
                         // Geofence entered, remove the marker
                         // TODO: can create a object of the addmarker and can delete that object to make it delete.
-                        if (markerOptions != null) {
-//                    Toast.makeText(requireContext(), "sdfs", Toast.LENGTH_SHORT).show()
-//                        mGoogleMap.clear()
-                            markerOptions.visible(false)
+                        val markerToRemove =
+                            tagToMarkers[dataSnapShot.child("placeName").getValue(String::class.java)
+                                .toString()] //todo get name of CustomMarker
+                        markerToRemove?.let {
+                            tagToMarkers.remove(dataSnapShot.child("placeName").getValue(String::class.java)
+                                .toString())
+                            it.remove()
                         }
                     }
                 }
@@ -157,18 +175,21 @@ class MapsFragment : Fragment() {
     // Custom InfoWindowAdapter class
     inner class CustomInfoWindowAdapter : GoogleMap.InfoWindowAdapter {
 
-        private val mInflater: LayoutInflater = requireContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        private val mInflater: LayoutInflater =
+            requireContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
         override fun getInfoContents(p0: Marker): View? {
             val customView = mInflater.inflate(R.layout.custom_marker_option, null)
 
             // Get data from the marker (assuming you have a custom Marker class)
             val customMarker = p0?.tag as? CustomMarker// Your custom marker class
-            if (customMarker != null){
+            if (customMarker != null) {
                 val nameTextView: TextView = customView.findViewById(R.id.textViewName)
-                val descriptionTextView: TextView = customView.findViewById(R.id.textViewDescription)
+                val descriptionTextView: TextView =
+                    customView.findViewById(R.id.textViewDescription)
                 val categoryTextView: TextView = customView.findViewById(R.id.textViewCategory)
-                val imageSliderLayout: LinearLayout = customView.findViewById(R.id.imageSliderLayout)
+                val imageSliderLayout: LinearLayout =
+                    customView.findViewById(R.id.imageSliderLayout)
 
                 nameTextView.text = customMarker.name
                 descriptionTextView.text = customMarker.description
@@ -183,14 +204,19 @@ class MapsFragment : Fragment() {
                     imageView.setImageResource(imageResId)
                     imageSliderLayout.addView(imageView)
                 }
+
                 customView.setOnClickListener {
                     // Handle click event here
                     // You can perform any action when the info window is clicked
-                    Toast.makeText(requireContext(), "Info window clicked for ${customMarker.name}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Info window clicked for ${customMarker.name}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    // Add your custom logic for the click event
                 }
+
             }
-
-
 
             return customView
         }
@@ -199,6 +225,7 @@ class MapsFragment : Fragment() {
             return null
         }
     }
+
     data class CustomMarker(
         val name: String,
         val description: String,
@@ -279,7 +306,7 @@ class MapsFragment : Fragment() {
         requireActivity().unregisterReceiver(geofenceReceiver)
     }
 
-    private fun getResponseFromRealtimeDatabaseUsingLiveData() : MutableLiveData<Response> {
+    private fun getResponseFromRealtimeDatabaseUsingLiveData(): MutableLiveData<Response> {
 
         myRef.child("place").get().addOnCompleteListener { task ->
             val response = Response()
@@ -300,12 +327,19 @@ class MapsFragment : Fragment() {
         }
         return mutableLiveData
     }
+
     companion object {
         private const val PERMISSIONS_REQUEST_LOCATION = 123
     }
 
     private fun checkPermissions(): Boolean {
-        return (ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+        return (ActivityCompat.checkSelfPermission(
+            requireActivity(),
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(
+            requireActivity(),
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED)
     }
 }
