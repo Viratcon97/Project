@@ -42,39 +42,40 @@ class MapsFragment : Fragment() {
 
     //Firebase initialization
     private val database = Firebase.database
-    private val myRef = database.getReference("capstone")
+    private val myRef = database.getReference("capstone").child("place")
 
     private val mutableLiveData = MutableLiveData<Response>()
 
     lateinit var mGoogleMap: GoogleMap
     private var mFusedLocationClient: FusedLocationProviderClient? = null
+
     private val geofenceReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == "GEOFENCE_EVENT") {
                 val geofenceName = intent.getStringExtra("geofenceName")
                 val latLng = intent.getParcelableExtra<LatLng>("latlng")
                 val entered = intent.getBooleanExtra("entered", true)
-                Toast.makeText(requireContext(), "RB: ${latLng.toString()} $entered", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(requireContext(), "RB: ${latLng.toString()} $entered", Toast.LENGTH_SHORT).show()
                 val markerOptions = latLng?.let {
                     MarkerOptions()
                         .position(it)
-                        .title("Home")
-                        .snippet("this is my home")
+                        .title(geofenceName)
+                        .snippet(latLng.toString())
                 }
 
-                if (markerOptions != null) {
-                    mGoogleMap.addMarker(markerOptions)
-                }
                 if (entered) {
-                    // Geofence entered, update your list
-                    geofenceName?.let {
-                        Toast.makeText(requireContext(), "test", Toast.LENGTH_SHORT).show()
+                    // Geofence entered, add the marker
+                    if (markerOptions != null) {
+//                    Toast.makeText(requireContext(), "sdfs", Toast.LENGTH_SHORT).show()
+                        mGoogleMap.addMarker(markerOptions)
+
                     }
                 } else {
-
-                    // Geofence exited, remove from the list
-                    geofenceName?.let {
-                        Toast.makeText(requireContext(), "test false", Toast.LENGTH_SHORT).show()
+                    // Geofence entered, remove the marker
+                    // TODO: can create a object of the addmarker and can delete that object to make it delete.
+                    if (markerOptions != null) {
+//                    Toast.makeText(requireContext(), "sdfs", Toast.LENGTH_SHORT).show()
+//                        mGoogleMap.clear()
                     }
                 }
             }
@@ -88,7 +89,7 @@ class MapsFragment : Fragment() {
                 val location = locationList.last()
                 // Create a LatLng object for the current location
                 val currentLatLng = LatLng(location!!.latitude, location!!.longitude)
-                Toast.makeText(getActivity(),currentLatLng.toString(), Toast.LENGTH_SHORT).show();
+                // Move the camera to the current location
                 mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, 15f))
                 mFusedLocationClient?.removeLocationUpdates(this)
                 // Create a marker for the current location
@@ -97,7 +98,7 @@ class MapsFragment : Fragment() {
 //                            .position(currentLatLng)
 //                            .title("My Location")
 //                    )
-                // Move the camera to the current location
+
             }
         }
     }
@@ -114,8 +115,6 @@ class MapsFragment : Fragment() {
 //
 //            mMap.addMarker(markerOptions)
 //    }*/
-
-        //mMap.moveCamera(CameraUpdateFactory.new( 16.0f))
 
         mGoogleMap = mMap
         mGoogleMap.mapType = GoogleMap.MAP_TYPE_HYBRID
@@ -196,7 +195,7 @@ class MapsFragment : Fragment() {
 
     private fun getResponseFromRealtimeDatabaseUsingLiveData() : MutableLiveData<Response> {
 
-        myRef.child("places").get().addOnCompleteListener { task ->
+        myRef.child("place").get().addOnCompleteListener { task ->
             val response = Response()
             if (task.isSuccessful) {
                 val result = task.result
