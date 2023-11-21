@@ -14,7 +14,6 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
@@ -52,30 +51,44 @@ class MapsFragment : Fragment() {
     private val geofenceReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == "GEOFENCE_EVENT") {
-                val geofenceName = intent.getStringExtra("geofenceName")
-                val latLng = intent.getParcelableExtra<LatLng>("latlng")
+                val geofenceId = intent.getStringExtra("geofenceId")
                 val entered = intent.getBooleanExtra("entered", true)
-//                Toast.makeText(requireContext(), "RB: ${latLng.toString()} $entered", Toast.LENGTH_SHORT).show()
-                val markerOptions = latLng?.let {
-                    MarkerOptions()
-                        .position(it)
-                        .title(geofenceName)
-                        .snippet(latLng.toString())
-                }
 
-                if (entered) {
-                    // Geofence entered, add the marker
-                    if (markerOptions != null) {
-//                    Toast.makeText(requireContext(), "sdfs", Toast.LENGTH_SHORT).show()
-                        mGoogleMap.addMarker(markerOptions)
+                fetchGeofenceDataFromFirebase(geofenceId, entered)
+            }
+        }
+    }
 
+    private fun fetchGeofenceDataFromFirebase(geofenceId: String?, entered: Boolean) {
+        myRef.child(geofenceId ?: "").get().addOnCompleteListener{ task ->
+            if (task.isSuccessful) {
+                val dataSnapShot = task.result
+                if (dataSnapShot != null && dataSnapShot.exists()) {
+                    val lat = dataSnapShot.child("latitude").getValue(Double::class.java) ?: 0.0
+                    val lng = dataSnapShot.child("longitude").getValue(Double::class.java)  ?: 0.0
+                    val latlng = LatLng(lat,lng)
+                    val markerOptions = latlng?.let {
+                        MarkerOptions()
+                            .position(it)
+                            .title(dataSnapShot.child("placeName").getValue(String::class.java))
+                            .snippet(dataSnapShot.child("placeDescription").getValue(String::class.java))
                     }
-                } else {
-                    // Geofence entered, remove the marker
-                    // TODO: can create a object of the addmarker and can delete that object to make it delete.
-                    if (markerOptions != null) {
+
+                    if (entered) {
+                        // Geofence entered, add the marker
+                        if (markerOptions != null) {
+//                    Toast.makeText(requireContext(), "sdfs", Toast.LENGTH_SHORT).show()
+                            mGoogleMap.addMarker(markerOptions)
+
+                        }
+                    } else {
+                        // Geofence entered, remove the marker
+                        // TODO: can create a object of the addmarker and can delete that object to make it delete.
+                        if (markerOptions != null) {
 //                    Toast.makeText(requireContext(), "sdfs", Toast.LENGTH_SHORT).show()
 //                        mGoogleMap.clear()
+                            markerOptions.visible(false)
+                        }
                     }
                 }
             }

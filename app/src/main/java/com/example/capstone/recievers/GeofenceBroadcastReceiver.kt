@@ -30,15 +30,13 @@ class GeofenceBroadcastReceiver: BroadcastReceiver() {
                 val geofenceIntent = Intent("GEOFENCE_EVENT")
                 if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER){
                     transitionType = "entered"
-                    geofenceIntent.putExtra("geofenceName", it.requestId)
-                    geofenceIntent.putExtra("latlng", LatLng(it.latitude, it.longitude))
+                    geofenceIntent.putExtra("geofenceId", it.requestId)
                     geofenceIntent.putExtra("entered", true)
                     context.sendBroadcast(geofenceIntent)
                     context.writeLogToFile(TAG, "Geofence entered, checkif broadcast is sent: ${it.requestId}")
                 }else{
                     transitionType =  "exited"
-                    geofenceIntent.putExtra("geofenceName", it.requestId)
-                    geofenceIntent.putExtra("latlng", LatLng(it.latitude, it.longitude))
+                    geofenceIntent.putExtra("geofenceId", it.requestId)
                     geofenceIntent.putExtra("entered", false)
                     context.sendBroadcast(geofenceIntent)
                     context.writeLogToFile(TAG, "Geofence exited,checkif broadcast is sent: ${it.requestId}")
