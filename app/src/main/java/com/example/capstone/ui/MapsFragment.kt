@@ -20,8 +20,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
-import androidx.core.content.getSystemService
 import androidx.lifecycle.MutableLiveData
 import com.example.capstone.R
 import com.example.capstone.model.Place
@@ -83,13 +81,10 @@ class MapsFragment : Fragment() {
                         // Geofence entered, add the marker
                         // Example of adding markers
                         val markerWithRating = CustomMarker(
-                            name = dataSnapShot.child("placeName").getValue(String::class.java)
-                                .toString(),
-                            description = dataSnapShot.child("placeDescription")
-                                .getValue(String::class.java).toString(),
-                            category = dataSnapShot.child("category").getValue(String::class.java)
-                                .toString(),
-                            iconRes = R.drawable.bottom_navigation_icon_event,
+                            name = dataSnapShot.child("placeName").getValue(String::class.java).toString(),
+                            description = dataSnapShot.child("placeDescription").getValue(String::class.java).toString(),
+                            category = dataSnapShot.child("category").getValue(String::class.java).toString(),
+                            iconRes = getCategoryIconRes(dataSnapShot.child("category").getValue(String::class.java).toString()),
                             imageResList = listOf(
                                 R.drawable.bottom_navigation_icon_event,
                                 R.drawable.bottom_navigation_icon_event,
@@ -101,8 +96,7 @@ class MapsFragment : Fragment() {
                                 .position(it)
                                 .title(dataSnapShot.child("placeName").getValue(String::class.java))
                                 .snippet(
-                                    dataSnapShot.child("placeDescription")
-                                        .getValue(String::class.java)
+                                    dataSnapShot.child("placeDescription").getValue(String::class.java)
                                 )
                         }
                         if (markerOptions != null) {
@@ -118,16 +112,26 @@ class MapsFragment : Fragment() {
                         // Geofence entered, remove the marker
                         // TODO: can create a object of the addmarker and can delete that object to make it delete.
                         val markerToRemove =
-                            tagToMarkers[dataSnapShot.child("placeName").getValue(String::class.java)
-                                .toString()] //todo get name of CustomMarker
+                            tagToMarkers[dataSnapShot.child("placeName").getValue(String::class.java).toString()]
                         markerToRemove?.let {
-                            tagToMarkers.remove(dataSnapShot.child("placeName").getValue(String::class.java)
-                                .toString())
+                            tagToMarkers.remove(dataSnapShot.child("placeName").getValue(String::class.java).toString())
                             it.remove()
                         }
                     }
                 }
             }
+        }
+    }
+
+    private fun getCategoryIconRes(category: String): Int {
+        return when (category.lowercase()) {
+            "Fun & Games" -> R.drawable.game_controller
+            "Hiking trails & Parks" -> R.drawable.hiking
+            "Point of interest & Landmark" -> R.drawable.point_of_interest
+            "Food & Drinks" -> R.drawable.drink
+            "Shopping malls & Antique shops" -> R.drawable.online_shopping
+            // Add more categories as needed
+            else -> R.drawable.point_of_interest
         }
     }
 
@@ -170,6 +174,23 @@ class MapsFragment : Fragment() {
         enableMyLocation()
         // Set custom InfoWindowAdapter
         mGoogleMap?.setInfoWindowAdapter(CustomInfoWindowAdapter())
+
+        mGoogleMap?.setOnInfoWindowClickListener { marker ->
+            val customMarker = marker?.tag as? CustomMarker
+            customMarker?.let {
+                // Handle marker click event here
+                Toast.makeText(
+                    requireContext(),
+                    "Marker clicked for ${customMarker.name}",
+                    Toast.LENGTH_SHORT
+                ).show()
+                loadFragment(PlaceDetailsFragment(),customMarker.name)
+                // Add your custom logic for the click event
+
+            }
+            // Return false to allow the default behavior (InfoWindow to be shown)
+            false
+        }
     }
 
     // Custom InfoWindowAdapter class
@@ -185,11 +206,10 @@ class MapsFragment : Fragment() {
             val customMarker = p0?.tag as? CustomMarker// Your custom marker class
             if (customMarker != null) {
                 val nameTextView: TextView = customView.findViewById(R.id.textViewName)
-                val descriptionTextView: TextView =
-                    customView.findViewById(R.id.textViewDescription)
+                val descriptionTextView: TextView = customView.findViewById(R.id.textViewDescription)
                 val categoryTextView: TextView = customView.findViewById(R.id.textViewCategory)
-                val imageSliderLayout: LinearLayout =
-                    customView.findViewById(R.id.imageSliderLayout)
+                val imageSliderLayout: LinearLayout = customView.findViewById(R.id.imageSliderLayout)
+                val iconImageView: ImageView = customView.findViewById(R.id.imageViewIcon)
 
                 nameTextView.text = customMarker.name
                 descriptionTextView.text = customMarker.description
@@ -204,17 +224,7 @@ class MapsFragment : Fragment() {
                     imageView.setImageResource(imageResId)
                     imageSliderLayout.addView(imageView)
                 }
-
-                customView.setOnClickListener {
-                    // Handle click event here
-                    // You can perform any action when the info window is clicked
-                    Toast.makeText(
-                        requireContext(),
-                        "Info window clicked for ${customMarker.name}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    // Add your custom logic for the click event
-                }
+                iconImageView.setImageResource(customMarker.iconRes)
 
             }
 
@@ -304,6 +314,16 @@ class MapsFragment : Fragment() {
         super.onDestroyView()
         requireContext().stopService(Intent(requireContext(), GeofenceService::class.java))
         requireActivity().unregisterReceiver(geofenceReceiver)
+    }
+
+    private fun loadFragment(fragment: Fragment, placeName: String ) {
+        val bundle = Bundle()
+        bundle.putString("place", placeName)
+        fragment.arguments = bundle
+        val transaction = requireActivity().supportFragmentManager.beginTransaction()
+        transaction.replace(R.id.container, fragment)
+        transaction.addToBackStack(null)
+        transaction.commit()
     }
 
     private fun getResponseFromRealtimeDatabaseUsingLiveData(): MutableLiveData<Response> {

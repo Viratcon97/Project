@@ -9,6 +9,8 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:id="@+id/placeDetailsId"
+        android:gravity="center"
+        android:text="blah"/>
 
 </FrameLayout>

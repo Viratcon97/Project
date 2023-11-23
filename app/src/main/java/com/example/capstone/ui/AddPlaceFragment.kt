@@ -84,7 +84,7 @@ class AddPlaceFragment : Fragment() {
         val adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_dropdown_item,
-            arrayOf("Park", "Trail", "Historical", "Innovative")
+            arrayOf("Fun & Games", "Hiking trails & Parks", "Point of interest & Landmark", "Food & Drinks", "Shopping malls & Antique shops")
         )
         fragmentAddPlaceBinding!!.categoryDropdown.setAdapter(adapter)
         fragmentAddPlaceBinding!!.categoryDropdown.onItemClickListener =

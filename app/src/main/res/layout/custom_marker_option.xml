@@ -24,14 +24,6 @@
         android:text="Description"
         android:textSize="14sp"/>
 
-    <!-- Category -->
-    <TextView
-        android:id="@+id/textViewCategory"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Category"
-        android:textSize="14sp"/>
-
     <!-- Image Slider (you can use a library like ViewPager or ViewPager2) -->
     <!-- For simplicity, this example uses a horizontal LinearLayout with three ImageView -->
     <LinearLayout
@@ -57,6 +49,19 @@
 
     </LinearLayout>
 
+    <!-- Category -->
+    <TextView
+        android:id="@+id/textViewCategory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Category"
+        android:textSize="14sp"/>
 
+    <!-- Icon Image -->
+    <ImageView
+        android:id="@+id/imageViewIcon"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:src="@drawable/bottom_navigation_icon_event"/>
 
 </LinearLayout>
