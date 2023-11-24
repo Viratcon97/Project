@@ -179,11 +179,11 @@ class MapsFragment : Fragment() {
             val customMarker = marker?.tag as? CustomMarker
             customMarker?.let {
                 // Handle marker click event here
-                Toast.makeText(
-                    requireContext(),
-                    "Marker clicked for ${customMarker.name}",
-                    Toast.LENGTH_SHORT
-                ).show()
+//                Toast.makeText(
+//                    requireContext(),
+//                    "Marker clicked for ${customMarker.name}",
+//                    Toast.LENGTH_SHORT
+//                ).show()
                 loadFragment(PlaceDetailsFragment(),customMarker.name)
                 // Add your custom logic for the click event
 
@@ -318,7 +318,7 @@ class MapsFragment : Fragment() {
 
     private fun loadFragment(fragment: Fragment, placeName: String ) {
         val bundle = Bundle()
-        bundle.putString("place", placeName)
+        bundle.putString("placeName", placeName)
         fragment.arguments = bundle
         val transaction = requireActivity().supportFragmentManager.beginTransaction()
         transaction.replace(R.id.container, fragment)
