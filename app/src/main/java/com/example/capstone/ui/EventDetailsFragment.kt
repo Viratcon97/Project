@@ -2,13 +2,9 @@ package com.example.capstone.ui
 
 import android.os.Build
 import android.os.Bundle
-import android.os.Parcel
-import android.os.Parcelable
-import android.os.Parcelable.Creator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.capstone.databinding.FragmentEventDetailsBinding
 import com.example.capstone.model.Events
