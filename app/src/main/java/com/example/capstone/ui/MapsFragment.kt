@@ -17,7 +17,6 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
@@ -80,7 +79,7 @@ class MapsFragment : Fragment() {
                     if (entered) {
                         // Geofence entered, add the marker
                         // Example of adding markers
-                        val markerWithRating = CustomMarker(
+                        val markerWithRating = CustomInfoWindow(
                             name = dataSnapShot.child("placeName").getValue(String::class.java).toString(),
                             description = dataSnapShot.child("placeDescription").getValue(String::class.java).toString(),
                             category = dataSnapShot.child("category").getValue(String::class.java).toString(),
@@ -176,15 +175,15 @@ class MapsFragment : Fragment() {
         mGoogleMap?.setInfoWindowAdapter(CustomInfoWindowAdapter())
 
         mGoogleMap?.setOnInfoWindowClickListener { marker ->
-            val customMarker = marker?.tag as? CustomMarker
-            customMarker?.let {
+            val customInfoWindow = marker?.tag as? CustomInfoWindow
+            customInfoWindow?.let {
                 // Handle marker click event here
 //                Toast.makeText(
 //                    requireContext(),
 //                    "Marker clicked for ${customMarker.name}",
 //                    Toast.LENGTH_SHORT
 //                ).show()
-                loadFragment(PlaceDetailsFragment(),customMarker.name)
+                loadFragment(PlaceDetailsFragment(),customInfoWindow.name)
                 // Add your custom logic for the click event
 
             }
@@ -200,22 +199,22 @@ class MapsFragment : Fragment() {
             requireContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
         override fun getInfoContents(p0: Marker): View? {
-            val customView = mInflater.inflate(R.layout.custom_marker_option, null)
+            val customView = mInflater.inflate(R.layout.custom_info_window, null)
 
             // Get data from the marker (assuming you have a custom Marker class)
-            val customMarker = p0?.tag as? CustomMarker// Your custom marker class
-            if (customMarker != null) {
+            val customInfoWindow = p0?.tag as? CustomInfoWindow// Your custom marker class
+            if (customInfoWindow != null) {
                 val nameTextView: TextView = customView.findViewById(R.id.textViewName)
                 val descriptionTextView: TextView = customView.findViewById(R.id.textViewDescription)
                 val categoryTextView: TextView = customView.findViewById(R.id.textViewCategory)
                 val imageSliderLayout: LinearLayout = customView.findViewById(R.id.imageSliderLayout)
                 val iconImageView: ImageView = customView.findViewById(R.id.imageViewIcon)
 
-                nameTextView.text = customMarker.name
-                descriptionTextView.text = customMarker.description
-                categoryTextView.text = customMarker.category
+                nameTextView.text = customInfoWindow.name
+                descriptionTextView.text = customInfoWindow.description
+                categoryTextView.text = customInfoWindow.category
 
-                for (imageResId in customMarker.imageResList) {
+                for (imageResId in customInfoWindow.imageResList) {
                     val imageView = ImageView(requireContext())
                     imageView.layoutParams = LinearLayout.LayoutParams(
                         400,
@@ -224,7 +223,7 @@ class MapsFragment : Fragment() {
                     imageView.setImageResource(imageResId)
                     imageSliderLayout.addView(imageView)
                 }
-                iconImageView.setImageResource(customMarker.iconRes)
+                iconImageView.setImageResource(customInfoWindow.iconRes)
 
             }
 
@@ -236,7 +235,7 @@ class MapsFragment : Fragment() {
         }
     }
 
-    data class CustomMarker(
+    data class CustomInfoWindow(
         val name: String,
         val description: String,
         val category: String,
